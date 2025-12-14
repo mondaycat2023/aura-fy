@@ -1,6 +1,6 @@
 # 🍌 Aura-fy: AI-Powered Mood & Music Visualizer
 
-**Aura-fy** is a "vibe coding" project that turns your abstract thoughts into a multisensory experience. It uses **Google Gemini AI** to understand the "color" of your mood and **Spotify** to curate a matching soundtrack.
+**Aura-fy** is a project that turns your abstract thoughts into a multisensory experience. It uses **Google Gemini AI** to understand the "color" of your mood and **Spotify** to curate a matching soundtrack.
 
 ![Project Screenshot](https://via.placeholder.com/800x400?text=App+Screenshot+Placeholder)
 
