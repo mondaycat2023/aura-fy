@@ -27,39 +27,97 @@ if "streamlit.app" in st.secrets.get("REDIRECT_URL", ""):
 def set_vibe_style(hex_color):
     st.markdown(f"""
         <style>
-        /* 1. Main Background */
+        /* IMPORT GOOGLE FONT */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        html, body, [class*="css"] {{
+            font-family: 'Poppins', sans-serif;
+        }}
+
+        /* 1. BACKGROUND: Dark gradient based on your vibe color */
         .stApp {{
-            background: linear-gradient(135deg, {hex_color} 0%, #1a1a1a 100%);
+            background: linear-gradient(135deg, {hex_color} 0%, #0a0a0a 100%);
             transition: background 1s ease-in-out;
             color: white;
         }}
         
-        /* 2. Title Text */
+        /* 2. TITLE: Modern, Centered, and Clean */
         h1 {{
             color: white !important;
-            text-shadow: 0px 4px 12px rgba(0,0,0,0.5);
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-shadow: 0px 0px 20px rgba(0,0,0,0.5);
+            margin-bottom: 2rem;
         }}
         
-        /* 3. Input Box Styling */
-        .stTextInput input {{
-            color: #000000 !important;
-            background-color: #ffffff !important;
-            border-radius: 10px;
-        }}
-        
-        .stTextInput label {{
+        /* 3. INPUT FIELD: Glassmorphism Style */
+        .stTextInput > div > div > input {{
+            background-color: rgba(255, 255, 255, 0.1) !important;
             color: white !important;
-            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }}
+        
+        /* Glow effect when you click the input */
+        .stTextInput > div > div > input:focus {{
+            border-color: white;
+            box-shadow: 0 0 15px {hex_color};
+            background-color: rgba(255, 255, 255, 0.15) !important;
+        }}
+        
+        /* Label styling */
+        .stTextInput label {{
+            color: rgba(255,255,255,0.8) !important;
+            font-size: 14px;
+            font-weight: 300;
         }}
 
-        /* --- NEW: HIDE STREAMLIT BRANDING --- */
-        #MainMenu {visibility: hidden;}
+        /* 4. BUTTONS: Sleek and Minimal */
+        .stButton > button {{
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }}
+        
+        .stButton > button:hover {{
+            background-color: white;
+            color: black;
+            border-color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }}
+        
+        /* 5. RADIO BUTTONS (Song Selection) */
+        .stRadio label {{
+            color: white !important;
+            background-color: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }}
+        
+        .stRadio label:hover {{
+            background-color: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.3);
+        }}
+
+        /* 6. HIDE DEFAULT STREAMLIT JUNK */
         footer {visibility: hidden;}
+        #MainMenu {visibility: hidden;}
         header {visibility: hidden;}
+        .viewerBadge_container__1QSob {display: none !important;}
         
         </style>
     """, unsafe_allow_html=True)
-
 # --- 3. THE APP UI ---
 st.title("🍌 Aura-fy Your Vibe")
 st.markdown("### *AI-Powered Mood & Music Visualizer*")
