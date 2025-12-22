@@ -16,44 +16,53 @@ st.set_page_config(page_title="Aura-fy", page_icon="🎵", layout="centered")
 def load_css():
     st.markdown("""
         <style>
-        /* IMPORT FONT */
+        /* 1. FORCE FONT (Import Poppins) */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-
-        html, body, [class*="css"] {
-            font-family: 'Poppins', sans-serif;
-        }
-
-        /* REMOVE DEFAULT PADDING */
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 5rem;
-        }
-
-        /* HIDE STREAMLIT BRANDING */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
         
-        /* GLASS INPUT BOX */
-        .stTextInput > div > div > input {
+        html, body, [class*="css"], [data-testid="stAppViewContainer"] {
+            font-family: 'Poppins', sans-serif !important;
+        }
+
+        /* 2. FORCE TRANSPARENT INPUTS (The "Glass" Look) */
+        /* We target the specific data attribute Streamlit uses */
+        [data-baseweb="input"] {
             background-color: rgba(255, 255, 255, 0.1) !important;
-            color: white !important;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 10px !important;
         }
         
-        /* SLEEK BUTTONS */
-        .stButton > button {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            transition: all 0.3s ease;
+        /* Input Text Color */
+        [data-baseweb="input"] > input {
+            color: white !important;
         }
-        .stButton > button:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-color: white;
+
+        /* 3. CENTER & GLOW THE TITLE */
+        h1 {
+            text-align: center !important;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+            padding-bottom: 20px !important;
+        }
+
+        /* 4. FORCE BUTTON STYLING */
+        [data-testid="stBaseButton-secondary"] {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+            width: 100% !important;
+        }
+        
+        [data-testid="stBaseButton-secondary"]:hover {
+            border-color: #00ffcc !important; /* Bright teal hover to PROVE it works */
+            color: #00ffcc !important;
+        }
+
+        /* 5. REMOVE ALL BRANDING */
+        [data-testid="stToolbar"], 
+        [data-testid="stDecoration"], 
+        [data-testid="stStatusWidget"],
+        footer {
+            display: none !important;
+            visibility: hidden !important;
         }
         </style>
     """, unsafe_allow_html=True)
