@@ -40,18 +40,23 @@ def set_vibe_style(hex_color):
             text-shadow: 0px 4px 12px rgba(0,0,0,0.5);
         }}
         
-        /* 3. Input Box Styling (The Fix!) */
+        /* 3. Input Box Styling */
         .stTextInput input {{
-            color: #000000 !important;        /* Text is always Black */
-            background-color: #ffffff !important; /* Box is always White */
+            color: #000000 !important;
+            background-color: #ffffff !important;
             border-radius: 10px;
         }}
         
-        /* 4. Input Label (The text "Enter your vibe") */
         .stTextInput label {{
             color: white !important;
             font-weight: bold;
         }}
+
+        /* --- NEW: HIDE STREAMLIT BRANDING --- */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        
         </style>
     """, unsafe_allow_html=True)
 
