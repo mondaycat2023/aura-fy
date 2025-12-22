@@ -88,22 +88,43 @@ if mood:
     # --- A. AI COLOR GENERATION ---
     # --- B. SPOTIFY CONNECTION ---
     try:
-        # CHANGED: We use ClientCredentials instead of OAuth
-        # This prevents the "Address already in use" error on Cloud
+        # Use ClientCredentials (no login required, faster)
         auth_manager = SpotifyClientCredentials(
             client_id=CLIENT_ID,
             client_secret=CLIENT_SECRET
         )
         sp = spotipy.Spotify(auth_manager=auth_manager)
         
-        # Search Spotify
-        results = sp.search(q=mood, limit=10, type='track')
+        # --- NEW LOGIC: SEARCH FOR PLAYLISTS FIRST ---
+        # Searching for a playlist (e.g. "lofi", "gym") gives better "vibe" results
+        # than searching for individual tracks.
+        search_results = sp.search(q=mood, limit=1, type='playlist')
         
-        if len(results['tracks']['items']) > 0:
+        final_tracks = []
+        
+        # 1. Did we find a playlist?
+        if search_results['playlists']['items']:
+            playlist_id = search_results['playlists']['items'][0]['id']
+            # Get the actual songs from inside that playlist
+            playlist_data = sp.playlist_tracks(playlist_id, limit=10)
+            
+            # Extract just the track info from the playlist structure
+            for item in playlist_data['items']:
+                if item['track']: # Check if track exists
+                    final_tracks.append(item['track'])
+                    
+        # 2. Fallback: If no playlist found, search for tracks directly (Old method)
+        if not final_tracks:
+            track_results = sp.search(q=mood, limit=10, type='track')
+            final_tracks = track_results['tracks']['items']
+
+        # --- DISPLAY THE RESULTS ---
+        if final_tracks:
             st.subheader(f"🎧 Soundtrack for: {mood}")
             
             track_options = {}
-            for track in results['tracks']['items']:
+            for track in final_tracks:
+                # Create a label: "Song Name - Artist"
                 label = f"{track['name']} - {track['artists'][0]['name']}"
                 track_options[label] = track['id']
             
@@ -119,7 +140,7 @@ if mood:
                 components.iframe(embed_url, height=80)
                 
         else:
-            st.warning(f"Couldn't find songs for '{mood}'. Try adding a genre name!")
+            st.warning(f"Couldn't find any songs for '{mood}'. Try a genre like 'Rock' or 'Jazz'!")
 
     except Exception as e:
         st.error(f"Spotify Error: {e}")
