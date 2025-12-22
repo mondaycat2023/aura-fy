@@ -1,6 +1,6 @@
 import streamlit as st
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyClientCredentials # <-- CHANGED THIS
 import streamlit.components.v1 as components
 import google.generativeai as genai
 import re
@@ -8,13 +8,21 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv() # This loads the .env file
-
+# Function to get keys from either .env (Local) or Streamlit Cloud (Deploy)
+def get_key(name):
+    # Try getting from os (local)
+    key = os.getenv(name)
+    # If not found, try getting from Streamlit secrets (cloud)
+    if not key and name in st.secrets:
+        key = st.secrets[name]
+    return key
 # Now we read from the environment variables, not hardcoded strings
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REDIRECT_URI = "http://127.0.0.1:8501"
-
+REDIRECT_URI = "https://aura-fy.streamlit.app/" 
+if "streamlit.app" in st.secrets.get("REDIRECT_URL", ""):
+    REDIRECT_URI = st.secrets["REDIRECT_URL"]
 # --- 2. THE UI STYLING ---
 def set_vibe_style(hex_color):
     st.markdown(f"""
@@ -78,36 +86,17 @@ with col2:
 if mood:
     
     # --- A. AI COLOR GENERATION ---
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('models/gemini-2.5-flash')
-        
-        prompt = f"You are a color theorist. What hex color code represents the mood: '{mood}'? Reply with ONLY the hex code (e.g., #ff0000). Do not write any other text."
-        
-        response = model.generate_content(prompt)
-        color_text = response.text.strip()
-        
-        match = re.search(r'#(?:[0-9a-fA-F]{3}){1,2}', color_text)
-        if match:
-            color = match.group(0)
-        else:
-            color = "#555555"
-            
-    except Exception as e:
-        color = "#333333"
-
-    set_vibe_style(color)
-    # (Removed the st.success bar here per your request)
-
     # --- B. SPOTIFY CONNECTION ---
     try:
-        sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+        # CHANGED: We use ClientCredentials instead of OAuth
+        # This prevents the "Address already in use" error on Cloud
+        auth_manager = SpotifyClientCredentials(
             client_id=CLIENT_ID,
-            client_secret=CLIENT_SECRET,
-            redirect_uri=REDIRECT_URI,
-            scope="user-library-read"
-        ))
+            client_secret=CLIENT_SECRET
+        )
+        sp = spotipy.Spotify(auth_manager=auth_manager)
         
+        # Search Spotify
         results = sp.search(q=mood, limit=10, type='track')
         
         if len(results['tracks']['items']) > 0:
