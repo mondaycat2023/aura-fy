@@ -89,7 +89,7 @@ def set_vibe_style(hex_color):
         </style>
     """, unsafe_allow_html=True)
 # --- 3. THE APP UI ---
-st.title("🍌 Aura-fy Your Vibe")
+st.title(" Aura-fy Your Vibe")
 st.markdown("### *AI-Powered Mood & Music Visualizer*")
 
 # Initialize session state for the input box if it doesn't exist
