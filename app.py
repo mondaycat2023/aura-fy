@@ -86,7 +86,7 @@ with col2:
 if mood:
     
     # --- A. AI COLOR GENERATION ---
-    # --- B. SPOTIFY CONNECTION ---
+   # --- B. SPOTIFY CONNECTION ---
     try:
         # Use ClientCredentials (no login required, faster)
         auth_manager = SpotifyClientCredentials(
@@ -96,27 +96,29 @@ if mood:
         sp = spotipy.Spotify(auth_manager=auth_manager)
         
         # --- NEW LOGIC: SEARCH FOR PLAYLISTS FIRST ---
-        # Searching for a playlist (e.g. "lofi", "gym") gives better "vibe" results
-        # than searching for individual tracks.
         search_results = sp.search(q=mood, limit=1, type='playlist')
         
         final_tracks = []
         
         # 1. Did we find a playlist?
-        if search_results['playlists']['items']:
+        if search_results and search_results.get('playlists') and search_results['playlists']['items']:
             playlist_id = search_results['playlists']['items'][0]['id']
+            
             # Get the actual songs from inside that playlist
             playlist_data = sp.playlist_tracks(playlist_id, limit=10)
             
-            # Extract just the track info from the playlist structure
-            for item in playlist_data['items']:
-                if item['track']: # Check if track exists
-                    final_tracks.append(item['track'])
+            # CRITICAL CHECK: Ensure playlist_data exists before reading it
+            if playlist_data and 'items' in playlist_data:
+                for item in playlist_data['items']:
+                    # Some playlist items are None or have no track info (e.g. local files)
+                    if item and item.get('track'):
+                        final_tracks.append(item['track'])
                     
-        # 2. Fallback: If no playlist found, search for tracks directly (Old method)
+        # 2. Fallback: If no playlist (or empty playlist), search for tracks directly
         if not final_tracks:
             track_results = sp.search(q=mood, limit=10, type='track')
-            final_tracks = track_results['tracks']['items']
+            if track_results and track_results.get('tracks'):
+                final_tracks = track_results['tracks']['items']
 
         # --- DISPLAY THE RESULTS ---
         if final_tracks:
@@ -124,23 +126,29 @@ if mood:
             
             track_options = {}
             for track in final_tracks:
-                # Create a label: "Song Name - Artist"
-                label = f"{track['name']} - {track['artists'][0]['name']}"
-                track_options[label] = track['id']
+                # Double check that track has artists to avoid crashes
+                if track and track.get('artists'):
+                    # Create a label: "Song Name - Artist"
+                    artist_name = track['artists'][0]['name']
+                    label = f"{track['name']} - {artist_name}"
+                    track_options[label] = track['id']
             
-            selected_label = st.radio(
-                "Select a track to play:", 
-                options=list(track_options.keys())
-            )
-            
-            if selected_label:
-                selected_track_id = track_options[selected_label]
-                st.markdown("---")
-                embed_url = f"https://open.spotify.com/embed/track/{selected_track_id}"
-                components.iframe(embed_url, height=80)
+            if track_options:
+                selected_label = st.radio(
+                    "Select a track to play:", 
+                    options=list(track_options.keys())
+                )
+                
+                if selected_label:
+                    selected_track_id = track_options[selected_label]
+                    st.markdown("---")
+                    embed_url = f"https://open.spotify.com/embed/track/{selected_track_id}"
+                    components.iframe(embed_url, height=80)
+            else:
+                st.warning("Found songs, but they had missing data. Try a different vibe!")
                 
         else:
-            st.warning(f"Couldn't find any songs for '{mood}'. Try a genre like 'Rock' or 'Jazz'!")
+            st.warning(f"Couldn't find songs for '{mood}'. Try adding a genre name!")
 
     except Exception as e:
         st.error(f"Spotify Error: {e}")
