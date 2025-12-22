@@ -88,7 +88,6 @@ if mood:
     # --- A. AI COLOR GENERATION ---
    # --- B. SPOTIFY CONNECTION ---
     try:
-        # Use ClientCredentials
         auth_manager = SpotifyClientCredentials(
             client_id=CLIENT_ID,
             client_secret=CLIENT_SECRET
@@ -97,34 +96,54 @@ if mood:
         
         final_tracks = []
         
-        # --- ATTEMPT 1: SEARCH FOR A PLAYLIST (The "Vibe" Method) ---
-        try:
-            # We wrap this in its own try/except so if it crashes, we just move to Attempt 2
-            playlist_results = sp.search(q=mood, limit=1, type='playlist')
-            
-            # Check if we actually got a playlist
-            if playlist_results and playlist_results.get('playlists') and playlist_results['playlists']['items']:
-                playlist_id = playlist_results['playlists']['items'][0]['id']
-                
-                # Get tracks
-                playlist_data = sp.playlist_tracks(playlist_id, limit=10)
-                
-                # Double check that we got valid data back
-                if playlist_data and 'items' in playlist_data:
-                    for item in playlist_data['items']:
-                        if item and item.get('track'):
-                            final_tracks.append(item['track'])
+        # --- STRATEGY 1: SMART PLAYLIST SEARCH (Looping) ---
+        # We append "hits" to the search (e.g., "Pop hits", "Gym hits") to find real mixes.
+        search_query = f"{mood} hits"
+        
+        # Get 5 playlists, not just 1. We will try them in order.
+        playlist_results = sp.search(q=search_query, limit=5, type='playlist')
+        
+        if playlist_results and 'playlists' in playlist_results:
+            for playlist_info in playlist_results['playlists']['items']:
+                # If we already found tracks from a previous loop, stop looking
+                if final_tracks:
+                    break
+                    
+                try:
+                    pid = playlist_info['id']
+                    # Try to fetch tracks from this specific playlist
+                    playlist_data = sp.playlist_tracks(pid, limit=10)
+                    
+                    # Check if this playlist is valid and has songs
+                    if playlist_data and 'items' in playlist_data:
+                        temp_tracks = []
+                        for item in playlist_data['items']:
+                            # Safe extraction: Ensure 'track' exists and has a name
+                            if item and item.get('track') and item['track'].get('name'):
+                                temp_tracks.append(item['track'])
+                        
+                        # If we successfully grabbed valid songs, save them and finish!
+                        if len(temp_tracks) > 0:
+                            final_tracks = temp_tracks
+                            # Optional: Show user which playlist was picked
+                            # st.caption(f"Pulled from playlist: {playlist_info['name']}")
                             
-        except Exception as e:
-            # If playlist search fails (NoneType error), we just ignore it and print a small log
-            print(f"Playlist search failed: {e}") 
-            # final_tracks remains empty, so code proceeds to Attempt 2 automatically
+                except Exception as e:
+                    # If this specific playlist fails, just ignore it and try the next one
+                    continue
 
-        # --- ATTEMPT 2: DIRECT TRACK SEARCH (The Fallback) ---
-        # If the playlist method failed or returned 0 songs, do this:
+        # --- STRATEGY 2: GENRE FALLBACK (If playlists fail) ---
+        # If the playlist loop found nothing, try searching by genre tag directly
         if not final_tracks:
-            track_results = sp.search(q=mood, limit=10, type='track')
+            # This search syntax "genre:pop" forces Spotify to look at metadata, not titles
+            track_results = sp.search(q=f"genre:{mood}", limit=10, type='track')
             if track_results and track_results.get('tracks'):
+                final_tracks = track_results['tracks']['items']
+
+        # --- STRATEGY 3: DESPERATE FALLBACK (Old Method) ---
+        if not final_tracks:
+             track_results = sp.search(q=mood, limit=10, type='track')
+             if track_results and track_results.get('tracks'):
                 final_tracks = track_results['tracks']['items']
 
         # --- DISPLAY RESULTS ---
@@ -150,7 +169,7 @@ if mood:
                     embed_url = f"https://open.spotify.com/embed/track/{selected_track_id}"
                     components.iframe(embed_url, height=80)
             else:
-                st.warning("Found songs but data was missing. Try another vibe.")
+                st.warning("Found songs but data was corrupted. Try another vibe.")
         else:
             st.warning(f"Couldn't find songs for '{mood}'. Try adding a genre name!")
 
